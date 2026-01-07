@@ -1,0 +1,21 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Google Fontsからタイ語フォントを読み込む */
+@import url('[https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@100..900&display=swap](https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@100..900&display=swap)');
+
+body {
+  margin: 0;
+  font-family: 'Noto Sans Thai', sans-serif;
+  background-color: #f8fafc; /* bg-slate-50 */
+}
+
+/* アプリっぽく見せるためにスクロールバーを隠す設定 */
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}
+.scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
