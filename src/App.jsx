@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Volume2, BookOpen, Brain, ChevronRight, ChevronLeft, X, RotateCcw, CheckCircle, XCircle, Search, Home, Info, Filter, MessageCircle, Play, Pause } from 'lucide-react';
+import { Volume2, BookOpen, Brain, ChevronRight, ChevronLeft, X, RotateCcw, CheckCircle, XCircle, Search, Home, Info, Filter, MessageCircle, Play, Pause, Save, List, Star, Shuffle } from 'lucide-react';
 
 // --- データ定義 ---
 
 // 文字（コーカイ）データベース
 const CHAR_DB = {
-  // 子音
   'ก': { type: '子音', class: '中類', name: 'コー・カイ', meaning: '鶏', sound: 'k' },
   'ข': { type: '子音', class: '高類', name: 'コー・カイ', meaning: '卵', sound: 'kh' },
   'ฃ': { type: '子音', class: '高類', name: 'コー・クアット', meaning: '瓶(廃字)', sound: 'kh' },
@@ -34,8 +33,6 @@ const CHAR_DB = {
   'ฮ': { type: '子音', class: '低類', name: 'ホー・ノックフーク', meaning: 'フクロウ', sound: 'h' },
   'ณ': { type: '子音', class: '低類', name: 'ノー・ネーン', meaning: '小坊主', sound: 'n' },
   'ญ': { type: '子音', class: '低類', name: 'ヨー・イン', meaning: '女性', sound: 'y' },
-
-  // 母音・記号など
   'ะ':  { type: '母音', name: 'サーラ・ア', sound: 'a (短)' },
   'ั':  { type: '母音', name: 'マイ・ハン・アカバ', sound: 'a (短)' },
   'า':  { type: '母音', name: 'サーラ・アー', sound: 'aa (長)' },
@@ -51,8 +48,6 @@ const CHAR_DB = {
   'ไ':  { type: '母音', name: 'サーラ・アイ', sound: 'ai' },
   'ใ':  { type: '母音', name: 'サーラ・アイ（マイムアン）', sound: 'ai' },
   'ำ':  { type: '母音', name: 'サーラ・アム', sound: 'am' },
-  
-  // 声調記号
   '่':  { type: '声調', name: 'マイ・エーク', meaning: '声調記号1', rule: '声調を変える' },
   '้':  { type: '声調', name: 'マイ・トー', meaning: '声調記号2', rule: '声調を変える' },
   '๊':  { type: '声調', name: 'マイ・トリー', meaning: '声調記号3', rule: '声調を変える' },
@@ -60,37 +55,11 @@ const CHAR_DB = {
   '์':  { type: '記号', name: 'ガラン', meaning: '発音しない記号' },
 };
 
-// 学習フレーズデータ（約200問+）
+// 学習フレーズデータ（約300問）
 const PHRASE_DATA = [
   // --- 挨拶 ---
-  {
-    id: 1,
-    category: '挨拶',
-    thai: 'สวัสดี',
-    phonetic: 'Sawasdee',
-    kana: 'サワッディー',
-    meaning: 'こんにちは',
-    description: '基本の挨拶です。手を合わせて（ワイをして）言いましょう。',
-    breakdown: [
-      { char: 'ส', ...CHAR_DB['ส'] },
-      { char: 'วั', type: '音節', sound: 'sa', toneRule: '高類(ส) + 短母音 = 低声(low)になるはずですが、慣用的に上昇気味に発音されます。' },
-      { char: 'ส', ...CHAR_DB['ส'] },
-      { char: 'ดี', type: '音節', sound: 'dee', toneRule: '中類(ด) + 長母音(ี) = 平声 (Mid)。' }
-    ]
-  },
-  {
-    id: 2,
-    category: '挨拶',
-    thai: 'ขอบคุณ',
-    phonetic: 'Khop khun',
-    kana: 'コープクン',
-    meaning: 'ありがとう',
-    description: '感謝を伝える言葉。目上の人には深く頭を下げましょう。',
-    breakdown: [
-      { char: 'ขอบ', type: '音節', sound: 'khop', toneRule: '高類(ข) + 死音(บ) = 低声 (Low)。' },
-      { char: 'คุณ', type: '音節', sound: 'khun', toneRule: '低類(ค) + 生音(ณ) = 平声 (Mid)。' }
-    ]
-  },
+  { id: 1, category: '挨拶', thai: 'สวัสดี', phonetic: 'Sawasdee', kana: 'サワッディー', meaning: 'こんにちは', description: '基本の挨拶です。手を合わせて（ワイをして）言いましょう。', breakdown: [{ char: 'ส', ...CHAR_DB['ส'] }, { char: 'วั', type: '音節', sound: 'sa', toneRule: '高類(ส) + 短母音 = 低声(low)になるはずですが、慣用的に上昇気味に発音されます。' }, { char: 'ส', ...CHAR_DB['ส'] }, { char: 'ดี', type: '音節', sound: 'dee', toneRule: '中類(ด) + 長母音(ี) = 平声 (Mid)。' }] },
+  { id: 2, category: '挨拶', thai: 'ขอบคุณ', phonetic: 'Khop khun', kana: 'コープクン', meaning: 'ありがとう', description: '感謝を伝える言葉。目上の人には深く頭を下げましょう。', breakdown: [{ char: 'ขอบ', type: '音節', sound: 'khop', toneRule: '高類(ข) + 死音(บ) = 低声 (Low)。' }, { char: 'คุณ', type: '音節', sound: 'khun', toneRule: '低類(ค) + 生音(ณ) = 平声 (Mid)。' }] },
   { id: 3, category: '挨拶', thai: 'ขอโทษ', phonetic: 'Kho thot', kana: 'コートート', meaning: 'ごめんなさい/すみません', breakdown: [] },
   { id: 4, category: '挨拶', thai: 'โชคดี', phonetic: 'Chok dee', kana: 'チョークディー', meaning: '幸運を/頑張って', breakdown: [] },
   { id: 5, category: '挨拶', thai: 'สบายดีไหม', phonetic: 'Sabai dee mai', kana: 'サバーイディーマイ？', meaning: '元気ですか？', breakdown: [] },
@@ -295,7 +264,7 @@ const PHRASE_DATA = [
   { id: 540, category: '形容詞', thai: 'สำคัญ', phonetic: 'Samkhan', kana: 'サムカン', meaning: '重要', breakdown: [] },
   { id: 541, category: '形容詞', thai: 'เหมือน', phonetic: 'Muean', kana: 'ムアン', meaning: '同じ', breakdown: [] },
   { id: 542, category: '形容詞', thai: 'ต่าง', phonetic: 'Tang', kana: 'ターン', meaning: '違う', breakdown: [] },
-
+  
   // --- 色 ---
   { id: 550, category: '色', thai: 'สี', phonetic: 'See', kana: 'シー', meaning: '色', breakdown: [] },
   { id: 551, category: '色', thai: 'สีแดง', phonetic: 'See daeng', kana: 'シーデーン', meaning: '赤', breakdown: [] },
@@ -829,6 +798,50 @@ export default function App() {
   const [currentTab, setCurrentTab] = useState('home'); 
   const [targetTab, setTargetTab] = useState(null); 
   const [selectedCategory, setSelectedCategory] = useState('すべて');
+  const [selectedConversation, setSelectedConversation] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  // --- ブックマーク機能 (LocalStorage) ---
+  const [bookmarks, setBookmarks] = useState(() => {
+    try {
+      const saved = localStorage.getItem('kengThaiBookmarks');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem('kengThaiBookmarks', JSON.stringify(bookmarks));
+  }, [bookmarks]);
+
+  const toggleBookmark = (id) => {
+    setBookmarks(prev => 
+      prev.includes(id) ? prev.filter(b => b !== id) : [...prev, id]
+    );
+  };
+
+  // --- 進捗保存機能 (LocalStorage) ---
+  const [progress, setProgress] = useState(() => {
+    try {
+      const saved = localStorage.getItem('kengThaiProgress');
+      return saved ? JSON.parse(saved) : {};
+    } catch (e) {
+      return {};
+    }
+  });
+
+  // 進捗が更新されたら保存
+  useEffect(() => {
+    localStorage.setItem('kengThaiProgress', JSON.stringify(progress));
+  }, [progress]);
+
+  const updateProgress = (category, index) => {
+    setProgress(prev => ({
+      ...prev,
+      [category]: index
+    }));
+  };
 
   // --- 音声再生 ---
   const playAudio = (text) => {
@@ -846,8 +859,18 @@ export default function App() {
     if (mode === 'conversation') {
       setCurrentTab('conversation_list');
     } else {
+      // 会話モードから戻ったときにカテゴリ選択がおかしくならないようにリセット
+      if (typeof selectedCategory === 'object') {
+          setSelectedCategory('すべて');
+      }
       setCurrentTab('category_select');
     }
+  };
+
+  // 検索からの直接遷移用関数
+  const handleSearch = () => {
+    setSelectedCategory('すべて');
+    setCurrentTab('learn');
   };
 
   const handleCategorySelect = (category) => {
@@ -858,19 +881,39 @@ export default function App() {
   const renderContent = () => {
     switch (currentTab) {
       case 'home':
-        return <HomeMenu onSelectMode={handleModeSelect} />;
+        return <HomeMenu onSelectMode={handleModeSelect} searchTerm={searchTerm} setSearchTerm={setSearchTerm} onSearch={handleSearch} />;
       case 'category_select':
         return <CategorySelectMenu onSelectCategory={handleCategorySelect} onBack={() => setCurrentTab('home')} targetMode={targetTab} />;
       case 'learn':
-        return <LearningMode playAudio={playAudio} onBack={() => setCurrentTab('home')} category={selectedCategory} />;
+        return <LearningMode 
+          playAudio={playAudio} 
+          onBack={() => setCurrentTab('home')} 
+          category={selectedCategory} 
+          progress={progress}
+          updateProgress={updateProgress}
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          bookmarks={bookmarks}
+          toggleBookmark={toggleBookmark}
+        />;
       case 'quiz':
         return <QuizMode playAudio={playAudio} onBack={() => setCurrentTab('home')} category={selectedCategory} />;
       case 'conversation_list':
-        return <ConversationList onBack={() => setCurrentTab('home')} onSelectConversation={(conv) => { setSelectedCategory(conv); setCurrentTab('conversation_detail'); }} />;
+        return <ConversationList 
+          onBack={() => setCurrentTab('home')} 
+          onSelectConversation={(conv) => { 
+            setSelectedConversation(conv); 
+            setCurrentTab('conversation_detail'); 
+          }} 
+        />;
       case 'conversation_detail':
-        return <ConversationDetail conversation={selectedCategory} onBack={() => setCurrentTab('conversation_list')} playAudio={playAudio} />;
+        return <ConversationDetail 
+          conversation={selectedConversation} 
+          onBack={() => setCurrentTab('conversation_list')} 
+          playAudio={playAudio} 
+        />;
       default:
-        return <HomeMenu onSelectMode={handleModeSelect} />;
+        return <HomeMenu onSelectMode={handleModeSelect} searchTerm={searchTerm} setSearchTerm={setSearchTerm} onSearch={handleSearch} />;
     }
   };
 
@@ -930,41 +973,62 @@ const NavButton = ({ icon, label, active, onClick }) => (
   </button>
 );
 
-const HomeMenu = ({ onSelectMode }) => (
-  <div className="p-6 flex flex-col gap-6">
-    <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl p-4 text-white shadow-lg">
-      <h2 className="text-lg font-bold mb-1">サワッディー！</h2>
-      <p className="opacity-90 text-sm">今日はどのフレーズを覚えますか？</p>
-    </div>
+const HomeMenu = ({ onSelectMode, searchTerm, setSearchTerm, onSearch }) => {
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    if (searchTerm) {
+        onSearch();
+    }
+  };
 
-    <div className="grid grid-cols-1 gap-4">
-      <MenuCard 
-        title="学習モード" 
-        desc="フレーズ学習" 
-        icon={<BookOpen className="text-indigo-500" size={40} />}
-        onClick={() => onSelectMode('learn')}
-        color="bg-indigo-50"
-        isLarge={true}
-      />
-      <MenuCard 
-        title="クイズモード" 
-        desc="4択問題で定着度をテスト" 
-        icon={<Brain className="text-pink-500" size={40} />}
-        onClick={() => onSelectMode('quiz')}
-        color="bg-pink-50"
-        isLarge={true}
-      />
-      <MenuCard 
-        title="会話モード" 
-        desc="実践的な会話フレーズ" 
-        icon={<MessageCircle className="text-green-500" size={40} />}
-        onClick={() => onSelectMode('conversation')}
-        color="bg-green-50"
-        isLarge={true}
-      />
+  return (
+    <div className="p-6 flex flex-col gap-6">
+      <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl p-4 text-white shadow-lg">
+        <h2 className="text-lg font-bold mb-1">サワッディー！</h2>
+        <p className="opacity-90 text-sm">今日はどのフレーズを覚えますか？</p>
+      </div>
+
+      {/* 検索バー */}
+      <form onSubmit={handleSearchSubmit} className="relative">
+        <input
+          type="text"
+          placeholder="単語を検索して学習..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full p-4 pl-12 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm"
+        />
+        <Search className="absolute left-4 top-4 text-slate-400" size={24} />
+      </form>
+
+      <div className="grid grid-cols-1 gap-4">
+        <MenuCard 
+          title="学習モード" 
+          desc="フレーズ学習" 
+          icon={<BookOpen className="text-indigo-500" size={40} />}
+          onClick={() => onSelectMode('learn')}
+          color="bg-indigo-50"
+          isLarge={true}
+        />
+        <MenuCard 
+          title="クイズモード" 
+          desc="4択問題で定着度をテスト" 
+          icon={<Brain className="text-pink-500" size={40} />}
+          onClick={() => onSelectMode('quiz')}
+          color="bg-pink-50"
+          isLarge={true}
+        />
+        <MenuCard 
+          title="会話モード" 
+          desc="実践的な会話フレーズ" 
+          icon={<MessageCircle className="text-green-500" size={40} />}
+          onClick={() => onSelectMode('conversation')}
+          color="bg-green-50"
+          isLarge={true}
+        />
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const MenuCard = ({ title, desc, icon, onClick, color, isLarge }) => (
   <button 
@@ -1001,6 +1065,19 @@ const CategorySelectMenu = ({ onSelectCategory, onBack, targetMode }) => {
       </div>
 
       <div className="grid grid-cols-2 gap-3 pb-8">
+        {/* ブックマーク（苦手）ボタンを追加 */}
+        {targetMode === 'learn' && (
+          <button
+            onClick={() => onSelectCategory('★苦手')}
+            className="p-4 rounded-xl border-2 text-left transition-all hover:scale-[1.02] active:scale-95 flex flex-col justify-between h-24 shadow-sm bg-yellow-50 border-yellow-200 text-yellow-800 col-span-2"
+          >
+            <span className="font-bold text-lg flex items-center gap-2"><Star size={20} fill="currentColor" /> 苦手リスト</span>
+            <div className="flex justify-end">
+              <ChevronRight size={16} className="text-yellow-400"/>
+            </div>
+          </button>
+        )}
+
         {categories.map((cat, i) => (
           <button
             key={i}
@@ -1022,85 +1099,219 @@ const CategorySelectMenu = ({ onSelectCategory, onBack, targetMode }) => {
   );
 };
 
-const LearningMode = ({ playAudio, onBack, category }) => {
-  const [index, setIndex] = useState(0);
+const LearningMode = ({ playAudio, onBack, category, progress, updateProgress, searchTerm, setSearchTerm, bookmarks, toggleBookmark }) => {
   const [showDetail, setShowDetail] = useState(false);
-  
+  const [isListView, setIsListView] = useState(false);
+
+  // フィルタリング
   const safeData = useMemo(() => {
-    const filteredData = category === 'すべて' 
-      ? PHRASE_DATA 
-      : PHRASE_DATA.filter(item => item.category === category);
-    return filteredData.length > 0 ? filteredData : PHRASE_DATA;
-  }, [category]);
+    let data = PHRASE_DATA;
+    
+    // ブックマークフィルタ
+    if (category === '★苦手') {
+      data = data.filter(item => bookmarks.includes(item.id));
+    } else if (category !== 'すべて') {
+      data = data.filter(item => item.category === category);
+    }
+
+    // 検索フィルタ
+    if (searchTerm) {
+      const lower = searchTerm.toLowerCase();
+      data = data.filter(item => 
+        item.thai.includes(searchTerm) || 
+        item.phonetic.toLowerCase().includes(lower) || 
+        item.meaning.includes(searchTerm) ||
+        item.kana.includes(searchTerm)
+      );
+    }
+    return data;
+  }, [category, searchTerm, bookmarks]);
+
+  // 検索語句がある場合はリスト表示にする
+  useEffect(() => {
+    if (searchTerm) {
+      setIsListView(true);
+    } else {
+      setIsListView(false);
+    }
+  }, [searchTerm]);
+
+  // 現在のインデックス管理
+  const [index, setIndex] = useState(0);
+
+  // データが変わったらインデックスをリセット
+  useEffect(() => {
+    if (searchTerm || category === '★苦手') {
+      setIndex(0);
+    } else if (category !== 'すべて' && progress[category] !== undefined) {
+      const savedIndex = progress[category];
+      setIndex(savedIndex < safeData.length ? savedIndex : 0);
+    } else {
+      setIndex(0);
+    }
+    setShowDetail(false);
+  }, [category, safeData.length]); // searchTerm依存を外してリスト表示切り替えのみに任せる
 
   const item = safeData[index];
-
-  useEffect(() => {
-    setIndex(0);
-    setShowDetail(false);
-  }, [category]);
+  const isBookmarked = item ? bookmarks.includes(item.id) : false;
 
   const nextCard = () => {
-    if (index < safeData.length - 1) setIndex(index + 1);
-    setShowDetail(false);
+    if (index < safeData.length - 1) {
+      const newIndex = index + 1;
+      setIndex(newIndex);
+      setShowDetail(false);
+      // 進捗保存（通常学習時のみ）
+      if (category !== 'すべて' && category !== '★苦手' && !searchTerm) {
+        updateProgress(category, newIndex);
+      }
+    }
   };
   const prevCard = () => {
-    if (index > 0) setIndex(index - 1);
-    setShowDetail(false);
+    if (index > 0) {
+      const newIndex = index - 1;
+      setIndex(newIndex);
+      setShowDetail(false);
+      if (category !== 'すべて' && category !== '★苦手' && !searchTerm) {
+        updateProgress(category, newIndex);
+      }
+    }
+  };
+
+  const handleListItemClick = (newIndex) => {
+    setIndex(newIndex);
+    setIsListView(false);
   };
 
   return (
     <div className="p-4 flex flex-col h-full">
+      {/* 検索バー */}
+      <div className="mb-4 relative">
+        <input
+          type="text"
+          placeholder="日本語・タイ語・発音で検索..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full p-3 pl-10 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+        />
+        <Search className="absolute left-3 top-3.5 text-slate-400" size={18} />
+        {searchTerm && (
+          <button onClick={() => setSearchTerm('')} className="absolute right-3 top-3.5 text-slate-400">
+            <X size={18} />
+          </button>
+        )}
+      </div>
+
       <div className="flex justify-between items-center mb-4">
         <button onClick={onBack} className="text-slate-400 hover:text-slate-600 flex items-center gap-1 text-sm font-bold">
           <ChevronLeft size={20} /> ホーム
         </button>
-        <span className="text-sm text-slate-500 font-bold">{item.category} ({index + 1}/{safeData.length})</span>
+        
+        {/* 検索中はカテゴリーを表示しない */}
+        {!isListView && !searchTerm && (
+          <span className="text-sm text-slate-500 font-bold">
+            {item ? `${category} (${index + 1}/${safeData.length})` : 'データなし'}
+          </span>
+        )}
+        {searchTerm && isListView && (
+           <span className="text-sm text-slate-500 font-bold">
+             {safeData.length} 件ヒット
+           </span>
+        )}
         <div className="w-10"></div>
       </div>
 
-      {safeData.length === 0 ? (
-        <div className="flex flex-col items-center justify-center h-64 text-slate-400">
-           <p>このカテゴリのデータはまだありません。</p>
+      {isListView ? (
+        // --- リスト表示モード ---
+        <div className="flex-1 overflow-y-auto bg-white rounded-2xl shadow-sm border border-slate-100 p-2">
+          {safeData.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full text-slate-400">
+              <p>一致するフレーズが見つかりません。</p>
+            </div>
+          ) : (
+            <ul className="divide-y divide-slate-100">
+              {safeData.map((item, i) => (
+                <li key={item.id}>
+                  <button
+                    onClick={() => handleListItemClick(i)}
+                    className="w-full text-left p-3 hover:bg-slate-50 flex justify-between items-center transition-colors rounded-lg"
+                  >
+                    <div>
+                      <p className="font-thai font-bold text-lg text-slate-800">{item.thai}</p>
+                      <p className="text-xs text-slate-500">{item.meaning}</p>
+                    </div>
+                    <ChevronRight size={16} className="text-slate-300" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       ) : (
+        // --- カード表示モード ---
         <>
-          <div className="bg-white rounded-2xl shadow-lg p-6 flex flex-col items-center text-center mb-6 relative border border-slate-100 flex-grow">
-            <button 
-              onClick={() => playAudio(item.thai)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-indigo-500 p-2 rounded-full bg-slate-50"
-            >
-              <Volume2 size={24} />
-            </button>
-
-            <div className="mt-8 mb-6">
-              <h2 className="text-6xl font-thai font-bold text-slate-800 mb-4 leading-normal">{item.thai}</h2>
-              <p className="text-slate-400 font-mono text-sm mb-1">{item.phonetic}</p>
-              <p className="text-2xl font-bold text-indigo-600 mb-4">{item.kana}</p>
-              <p className="text-lg text-slate-700 font-medium">{item.meaning}</p>
+          {safeData.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-64 text-slate-400">
+              <p>データがありません。</p>
             </div>
+          ) : (
+            <>
+              <div className="bg-white rounded-2xl shadow-lg p-6 flex flex-col items-center text-center mb-6 relative border border-slate-100 flex-grow">
+                {/* リストに戻るボタン（検索中のみ） */}
+                {searchTerm && (
+                  <button 
+                    onClick={() => setIsListView(true)}
+                    className="absolute top-4 left-4 text-slate-400 hover:text-slate-600 p-1"
+                  >
+                    <List size={24} />
+                  </button>
+                )}
 
-            <div className="bg-slate-50 p-4 rounded-xl text-sm text-slate-600 w-full text-left mb-6">
-              <p>{item.description || '特記事項はありません'}</p>
-            </div>
+                {/* ブックマークボタン */}
+                <button 
+                    onClick={() => toggleBookmark(item.id)}
+                    className="absolute top-4 left-4 text-slate-300 hover:text-yellow-400 transition-colors p-2"
+                    style={{ left: searchTerm ? '3.5rem' : '1rem' }} // 検索時はリストボタンと被らないようにずらす
+                >
+                    <Star size={28} fill={isBookmarked ? "#fbbf24" : "none"} className={isBookmarked ? "text-yellow-400" : ""} />
+                </button>
 
-            <button 
-              onClick={() => setShowDetail(true)}
-              disabled={!item.breakdown || item.breakdown.length === 0}
-              className={`mt-auto w-full py-3 border-2 font-bold rounded-xl transition-colors flex items-center justify-center gap-2
-                ${!item.breakdown || item.breakdown.length === 0 
-                  ? 'border-slate-100 text-slate-300 cursor-not-allowed' 
-                  : 'border-indigo-100 text-indigo-600 hover:bg-indigo-50'}`}
-            >
-              <Search size={18} />
-              {!item.breakdown || item.breakdown.length === 0 ? '分析データなし' : '文字・声調を分析'}
-            </button>
-          </div>
+                <button 
+                  onClick={() => playAudio(item.thai)}
+                  className="absolute top-4 right-4 text-slate-400 hover:text-indigo-500 p-2 rounded-full bg-slate-50"
+                >
+                  <Volume2 size={24} />
+                </button>
 
-          <div className="flex gap-4">
-            <button onClick={prevCard} disabled={index === 0} className="flex-1 py-3 rounded-xl bg-slate-200 text-slate-500 font-bold disabled:opacity-50">戻る</button>
-            <button onClick={nextCard} disabled={index === safeData.length - 1} className="flex-1 py-3 rounded-xl bg-indigo-600 text-white font-bold disabled:opacity-50">次へ</button>
-          </div>
+                <div className="mt-8 mb-6">
+                  <h2 className="text-5xl font-thai font-bold text-slate-800 mb-4 leading-normal">{item.thai}</h2>
+                  <p className="text-slate-400 font-mono text-sm mb-1">{item.phonetic}</p>
+                  <p className="text-2xl font-bold text-indigo-600 mb-4">{item.kana}</p>
+                  <p className="text-lg text-slate-700 font-medium">{item.meaning}</p>
+                </div>
+
+                <div className="bg-slate-50 p-4 rounded-xl text-sm text-slate-600 w-full text-left mb-6 overflow-y-auto max-h-32">
+                  <p>{item.description || '特記事項はありません'}</p>
+                </div>
+
+                <button 
+                  onClick={() => setShowDetail(true)}
+                  disabled={!item.breakdown || item.breakdown.length === 0}
+                  className={`mt-auto w-full py-3 border-2 font-bold rounded-xl transition-colors flex items-center justify-center gap-2
+                    ${!item.breakdown || item.breakdown.length === 0 
+                      ? 'border-slate-100 text-slate-300 cursor-not-allowed' 
+                      : 'border-indigo-100 text-indigo-600 hover:bg-indigo-50'}`}
+                >
+                  <Search size={18} />
+                  {!item.breakdown || item.breakdown.length === 0 ? '分析データなし' : '文字・声調を分析'}
+                </button>
+              </div>
+
+              <div className="flex gap-4 pb-4">
+                <button onClick={prevCard} disabled={index === 0} className="flex-1 py-3 rounded-xl bg-slate-200 text-slate-500 font-bold disabled:opacity-50">戻る</button>
+                <button onClick={nextCard} disabled={index === safeData.length - 1} className="flex-1 py-3 rounded-xl bg-indigo-600 text-white font-bold disabled:opacity-50">次へ</button>
+              </div>
+            </>
+          )}
         </>
       )}
 
@@ -1184,19 +1395,26 @@ const QuizMode = ({ playAudio, onBack, category }) => {
   const [selected, setSelected] = useState(null);
   const [isCorrect, setIsCorrect] = useState(null);
   const [options, setOptions] = useState([]);
+  const [isRandom, setIsRandom] = useState(false); // ランダム出題スイッチ
 
+  // フィルタリング
   const safeData = useMemo(() => {
-    const filteredData = category === 'すべて' 
+    let data = category === 'すべて' 
       ? PHRASE_DATA 
       : PHRASE_DATA.filter(item => item.category === category);
-    return filteredData.length > 0 ? filteredData : PHRASE_DATA;
-  }, [category]);
+    
+    // ランダムの場合はシャッフル
+    if (isRandom) {
+       return [...data].sort(() => 0.5 - Math.random());
+    }
+    return data;
+  }, [category, isRandom]); // isRandomが変わったら再計算
 
   useEffect(() => {
     setQIndex(0);
     setScore(0);
     setGameState('playing');
-  }, [category]);
+  }, [category, isRandom]);
 
   useEffect(() => {
     if (gameState !== 'playing') return;
@@ -1251,11 +1469,22 @@ const QuizMode = ({ playAudio, onBack, category }) => {
 
   return (
     <div className="p-4 flex flex-col h-full">
-      <div className="flex items-center gap-2 mb-4">
-        <button onClick={onBack} className="text-slate-400 hover:text-slate-600 flex items-center gap-1 text-sm font-bold">
-          <ChevronLeft size={20} /> ホーム
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+            <button onClick={onBack} className="text-slate-400 hover:text-slate-600 flex items-center gap-1 text-sm font-bold">
+            <ChevronLeft size={20} /> ホーム
+            </button>
+            <span className="text-xs font-bold bg-indigo-100 text-indigo-600 px-2 py-1 rounded-full">{category}</span>
+        </div>
+        
+        {/* ランダム切り替えボタン */}
+        <button 
+            onClick={() => setIsRandom(!isRandom)}
+            className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold transition-colors ${isRandom ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-500'}`}
+        >
+            <Shuffle size={14} />
+            {isRandom ? 'ランダム' : '順番'}
         </button>
-        <span className="text-xs font-bold bg-indigo-100 text-indigo-600 px-2 py-1 rounded-full">{category}</span>
       </div>
 
       <div className="w-full bg-slate-200 rounded-full h-2 mb-6">
@@ -1302,7 +1531,7 @@ const ConversationList = ({ onBack, onSelectConversation }) => {
     <div className="p-4 flex flex-col h-full">
       <div className="flex items-center gap-2 mb-6">
         <button onClick={onBack} className="text-slate-400 hover:text-slate-600 flex items-center gap-1 text-sm font-bold">
-          <ChevronLeft size={20} /> 戻る
+          <ChevronLeft size={20} /> ホーム
         </button>
       </div>
 
@@ -1334,22 +1563,10 @@ const ConversationList = ({ onBack, onSelectConversation }) => {
 
 // --- 会話詳細モード（チャットUI） ---
 const ConversationDetail = ({ conversation, onBack, playAudio }) => {
-  // 会話全体を順番に再生する機能用
   const [isPlayingAll, setIsPlayingAll] = useState(false);
-
-  const playAll = async () => {
-    setIsPlayingAll(true);
-    // 簡易的な実装: 順番に再生（実際はonendイベント等をハンドリングする必要があるが、デモとしてループ）
-    // Web Speech APIの制約で連続再生は工夫が必要なため、ここでは最初の文だけ再生する簡易版とするか、
-    // ユーザーが個別に押す形を推奨するUIにする。
-    // 今回は個別に押させる形を基本とする。
-    alert('会話文をタップして音声を再生してください');
-    setIsPlayingAll(false);
-  };
 
   return (
     <div className="flex flex-col h-full bg-slate-50">
-      {/* Header */}
       <div className="bg-white p-4 border-b border-slate-200 flex items-center justify-between sticky top-0 z-10">
         <div className="flex items-center gap-2">
           <button onClick={onBack} className="text-slate-400 hover:text-slate-600">
@@ -1360,23 +1577,17 @@ const ConversationDetail = ({ conversation, onBack, playAudio }) => {
             <h3 className="font-bold text-slate-800">{conversation.title}</h3>
           </div>
         </div>
-        {/* <button onClick={playAll} className="text-indigo-600 bg-indigo-50 p-2 rounded-full hover:bg-indigo-100">
-          <Play size={20} fill="currentColor" />
-        </button> */}
       </div>
 
-      {/* Chat Area */}
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
         {conversation.dialogue.map((line, i) => (
           <div key={i} className={`flex ${line.speaker === 'B' ? 'justify-end' : 'justify-start'}`}>
             <div className={`flex gap-3 max-w-[85%] ${line.speaker === 'B' ? 'flex-row-reverse' : ''}`}>
-              {/* Icon */}
               <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold shrink-0 shadow-sm
                 ${line.speaker === 'A' ? 'bg-indigo-500' : 'bg-pink-500'}`}>
                 {line.speaker}
               </div>
 
-              {/* Bubble */}
               <div className="flex flex-col gap-1">
                 <div 
                   onClick={() => playAudio(line.thai)}
@@ -1388,7 +1599,6 @@ const ConversationDetail = ({ conversation, onBack, playAudio }) => {
                   <p className="text-xl font-thai font-bold text-slate-800 mb-1">{line.thai}</p>
                   <p className="text-xs text-slate-400 font-mono mb-1">{line.phonetic}</p>
                   <p className="text-sm text-slate-600 border-t border-slate-100 pt-1 mt-1">{line.meaning}</p>
-                  
                   <Volume2 size={14} className="absolute top-2 right-2 text-slate-300" />
                 </div>
               </div>
